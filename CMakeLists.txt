@@ -210,6 +210,9 @@ find_package(Qt5XkbCommonSupport REQUIRED)
 find_package(Libinput 1.19)
 set_package_properties(Libinput PROPERTIES TYPE REQUIRED PURPOSE "Required for input handling on Wayland.")
 
+find_package(Libeis)
+set_package_properties(Libeis PROPERTIES TYPE OPTIONAL PURPOSE "Required for emulated input handling.")
+
 find_package(UDev)
 set_package_properties(UDev PROPERTIES
     URL "https://www.freedesktop.org/wiki/Software/systemd/"
@@ -245,6 +248,7 @@ set_package_properties(lcms2 PROPERTIES
     TYPE OPTIONAL
 )
 add_feature_info("lcms2" lcms2_FOUND "Required for the color management system")
+
 
 # All the required XCB components
 find_package(XCB 1.10 REQUIRED COMPONENTS
@@ -346,6 +350,7 @@ option(KWIN_BUILD_TABBOX "Enable building of KWin Tabbox functionality" ON)
 cmake_dependent_option(KWIN_BUILD_ACTIVITIES "Enable building of KWin with kactivities support" ON "KF5Activities_FOUND" OFF)
 cmake_dependent_option(KWIN_BUILD_RUNNERS "Enable building of KWin with krunner support" ON "KF5Runner_FOUND" OFF)
 cmake_dependent_option(KWIN_BUILD_CMS "Enable building of KWin with CMS" ON "lcms2_FOUND" OFF)
+cmake_dependent_option(KWIN_BUILD_EIS "Enable building KWin with libeis support" ON "Libeis_FOUND" OFF)
 
 # Binary name of KWin
 set(KWIN_NAME "kwin")

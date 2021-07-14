@@ -10,6 +10,7 @@
 */
 #include "input.h"
 #include "backends/fakeinput/fakeinputbackend.h"
+#include "backends/libeis/libeisbackend.h"
 #include "backends/libinput/connection.h"
 #include "backends/libinput/device.h"
 #include "effects.h"
@@ -2230,6 +2231,7 @@ InputRedirection::InputRedirection(QObject *parent)
     qRegisterMetaType<KWin::InputRedirection::PointerButtonState>();
     qRegisterMetaType<KWin::InputRedirection::PointerAxis>();
     setupInputBackends();
+
     connect(kwinApp(), &Application::workspaceCreated, this, &InputRedirection::setupWorkspace);
 }
 
@@ -2684,6 +2686,9 @@ void InputRedirection::setupInputBackends()
     }
     if (waylandServer()) {
         addInputBackend(new FakeInputBackend());
+#ifdef KWIN_BUILD_EIS
+        addInputBackend(new LibeisBackend());
+#endif
     }
 }
 
