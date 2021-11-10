@@ -19,31 +19,33 @@
 namespace KWin
 {
 
-GbmSurface::GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, uint32_t flags)
+GbmSurface::GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, uint32_t flags, EGLConfig config)
     : m_surface(gbm_surface_create(gpu->gbmDevice(), size.width(), size.height(), format, flags))
     , m_gpu(gpu)
     , m_size(size)
+    , m_format(format)
 {
     if (!m_surface) {
         qCCritical(KWIN_DRM) << "Could not create gbm surface!" << strerror(errno);
         return;
     }
-    m_eglSurface = eglCreatePlatformWindowSurfaceEXT(m_gpu->eglDisplay(), m_gpu->eglBackend()->config(), m_surface, nullptr);
+    m_eglSurface = eglCreatePlatformWindowSurfaceEXT(m_gpu->eglDisplay(), config, m_surface, nullptr);
     if (m_eglSurface == EGL_NO_SURFACE) {
         qCCritical(KWIN_DRM) << "Creating EGL surface failed!" << getEglErrorString();
     }
 }
 
-GbmSurface::GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, QVector<uint64_t> modifiers)
+GbmSurface::GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, QVector<uint64_t> modifiers, EGLConfig config)
     : m_surface(gbm_surface_create_with_modifiers(gpu->gbmDevice(), size.width(), size.height(), format, modifiers.isEmpty() ? nullptr : modifiers.constData(), modifiers.count()))
     , m_gpu(gpu)
     , m_size(size)
+    , m_format(format)
 {
     if (!m_surface) {
         qCCritical(KWIN_DRM) << "Could not create gbm surface!" << strerror(errno);
         return;
     }
-    m_eglSurface = eglCreatePlatformWindowSurfaceEXT(m_gpu->eglDisplay(), m_gpu->eglBackend()->config(), m_surface, nullptr);
+    m_eglSurface = eglCreatePlatformWindowSurfaceEXT(m_gpu->eglDisplay(), config, m_surface, nullptr);
     if (m_eglSurface == EGL_NO_SURFACE) {
         qCCritical(KWIN_DRM) << "Creating EGL surface failed!" << getEglErrorString();
     }
@@ -114,6 +116,11 @@ QSharedPointer<GbmBuffer> GbmSurface::currentBuffer() const
 QSharedPointer<DrmGbmBuffer> GbmSurface::currentDrmBuffer() const
 {
     return m_currentDrmBuffer;
+}
+
+uint32_t GbmSurface::format() const
+{
+    return m_format;
 }
 
 }

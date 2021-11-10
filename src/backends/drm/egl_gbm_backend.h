@@ -37,6 +37,15 @@ class ShadowBuffer;
 class DrmBackend;
 class DrmGpu;
 
+struct GbmFormat {
+    uint32_t format;
+    EGLint redSize;
+    EGLint greenSize;
+    EGLint blueSize;
+    EGLint alphaSize;
+};
+bool operator==(const GbmFormat &lhs, const GbmFormat &rhs);
+
 /**
  * @brief OpenGL Backend using Egl on a GBM surface.
  */
@@ -65,7 +74,7 @@ public:
     bool directScanoutAllowed(AbstractOutput *output) const override;
 
     QSharedPointer<DrmBuffer> renderTestFrame(DrmAbstractOutput *output);
-    uint32_t drmFormat() const;
+    uint32_t drmFormat(DrmAbstractOutput *output) const;
     DrmGpu *gpu() const;
 
 protected:
@@ -88,6 +97,7 @@ private:
             QSharedPointer<GbmSurface> gbmSurface;
             int bufferAge = 0;
             DamageJournal damageJournal;
+            GbmFormat format;
 
             // for secondary GPU import
             ImportMode importMode = ImportMode::Dmabuf;
@@ -110,13 +120,15 @@ private:
     QSharedPointer<DrmBuffer> importFramebuffer(Output &output, const QRegion &dirty) const;
     QSharedPointer<DrmBuffer> endFrameWithBuffer(AbstractOutput *output, const QRegion &dirty);
     void updateBufferAge(Output &output, const QRegion &dirty);
+    GbmFormat chooseFormat(Output &output) const;
 
     void cleanupRenderData(Output::RenderData &output);
 
     QMap<AbstractOutput *, Output> m_outputs;
-    uint32_t m_gbmFormat;
     DrmBackend *m_backend;
     DrmGpu *m_gpu;
+    QVector<GbmFormat> m_formats;
+    QMap<uint32_t, EGLConfig> m_configs;
 
     static EglGbmBackend *renderingBackend();
 

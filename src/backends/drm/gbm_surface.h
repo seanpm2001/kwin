@@ -24,8 +24,8 @@ namespace KWin
 class GbmSurface
 {
 public:
-    explicit GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, uint32_t flags);
-    explicit GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, QVector<uint64_t> modifiers);
+    explicit GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, uint32_t flags, EGLConfig config);
+    explicit GbmSurface(DrmGpu *gpu, const QSize &size, uint32_t format, QVector<uint64_t> modifiers, EGLConfig config);
     ~GbmSurface();
 
     QSharedPointer<DrmGbmBuffer> swapBuffersForDrm();
@@ -47,12 +47,14 @@ public:
     bool isValid() const {
         return m_surface != nullptr && m_eglSurface != EGL_NO_SURFACE;
     }
+    uint32_t format() const;
 
 private:
     gbm_surface *m_surface;
     DrmGpu *m_gpu;
     EGLSurface m_eglSurface = EGL_NO_SURFACE;
     QSize m_size;
+    uint32_t m_format;
 
     QSharedPointer<GbmBuffer> m_currentBuffer;
     QSharedPointer<DrmGbmBuffer> m_currentDrmBuffer;

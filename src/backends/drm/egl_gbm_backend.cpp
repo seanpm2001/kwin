@@ -148,8 +148,14 @@ bool EglGbmBackend::initRenderingContext()
 
 bool EglGbmBackend::resetOutput(Output &output)
 {
+    GbmFormat format = chooseFormat(output);
+    if (format.format == 0) {
+        qCCritical(KWIN_DRM) << "Could not find a suitable format for output" << output.output;
+        return false;
+    }
+    output.current.format = format;
     const QSize size = output.output->sourceSize();
-    QVector<uint64_t> modifiers = output.output->supportedModifiers(m_gbmFormat);
+    QVector<uint64_t> modifiers = output.output->supportedModifiers(format.format);
 
     QSharedPointer<GbmSurface> gbmSurface;
 #if HAVE_GBM_BO_GET_FD_FOR_PLANE
@@ -164,14 +170,14 @@ bool EglGbmBackend::resetOutput(Output &output)
         } else {
             flags |= GBM_BO_USE_LINEAR;
         }
-        gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, m_gbmFormat, flags);
+        gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, format.format, flags, m_configs[format.format]);
     } else {
-        gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, m_gbmFormat, modifiers);
+        gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, format.format, modifiers, m_configs[format.format]);
         if (!gbmSurface->isValid()) {
             // the egl / gbm implementation may reject the modifier list from another gpu
             // as a fallback use linear, to at least make CPU copy more efficient
             modifiers = {DRM_FORMAT_MOD_LINEAR};
-            gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, m_gbmFormat, modifiers);
+            gbmSurface = QSharedPointer<GbmSurface>::create(m_gpu, size, format.format, modifiers, m_configs[format.format]);
         }
     }
     if (!gbmSurface->isValid()) {
@@ -187,7 +193,7 @@ bool EglGbmBackend::resetOutput(Output &output)
         output.current.shadowBuffer = nullptr;
     } else {
         makeContextCurrent(output.current);
-        output.current.shadowBuffer = QSharedPointer<ShadowBuffer>::create(output.output->pixelSize());
+        output.current.shadowBuffer = QSharedPointer<ShadowBuffer>::create(output.output->pixelSize(), output.current.format);
         if (!output.current.shadowBuffer->isComplete()) {
             return false;
         }
@@ -387,10 +393,7 @@ bool EglGbmBackend::initBufferConfigs()
         return false;
     }
 
-    qCDebug(KWIN_DRM) << "EGL buffer configs count:" << count;
-
-    uint32_t fallbackFormat = 0;
-    EGLConfig fallbackConfig = nullptr;
+    setConfig(EGL_NO_CONFIG_KHR);
 
     // Loop through all configs, choosing the first one that has suitable format.
     for (EGLint i = 0; i < count; i++) {
@@ -401,32 +404,49 @@ bool EglGbmBackend::initBufferConfigs()
             continue;
         }
 
+        GbmFormat format;
+        format.format = gbmFormat;
         // Query number of bits for color channel
-        EGLint blueSize, redSize, greenSize, alphaSize;
-        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_RED_SIZE, &redSize);
-        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_GREEN_SIZE, &greenSize);
-        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_BLUE_SIZE, &blueSize);
-        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_ALPHA_SIZE, &alphaSize);
+        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_RED_SIZE, &format.redSize);
+        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_GREEN_SIZE, &format.greenSize);
+        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_BLUE_SIZE, &format.blueSize);
+        eglGetConfigAttrib(eglDisplay(), configs[i], EGL_ALPHA_SIZE, &format.alphaSize);
 
-        // prefer XRGB8888 as it's most likely to be supported by secondary GPUs as well
-        if (gbmFormat == GBM_FORMAT_XRGB8888) {
-            m_gbmFormat = gbmFormat;
-            setConfig(configs[i]);
-            return true;
-        } else if (!fallbackConfig && blueSize >= 8 && redSize >= 8 && greenSize >= 8) {
-            fallbackFormat = gbmFormat;
-            fallbackConfig = configs[i];
+        if (m_formats.contains(format)) {
+            continue;
         }
+        m_formats << format;
+        m_configs[format.format] = configs[i];
     }
 
-    if (fallbackConfig) {
-        m_gbmFormat = fallbackFormat;
-        setConfig(fallbackConfig);
+    QVector<int> colorDepthOrder = {30, 24};
+    bool ok = false;
+    int preferred = qEnvironmentVariableIntValue("KWIN_DRM_PREFER_COLOR_DEPTH", &ok);
+    if (ok) {
+        colorDepthOrder.prepend(preferred);
+    }
+
+    std::sort(m_formats.begin(), m_formats.end(), [&colorDepthOrder](const auto &lhs, const auto &rhs) {
+        int ls = lhs.redSize + lhs.greenSize + lhs.blueSize;
+        int rs = rhs.redSize + rhs.greenSize + rhs.blueSize;
+        if (ls == rs) {
+            return lhs.alphaSize < rhs.alphaSize;
+        } else {
+            for (int d : qAsConst(colorDepthOrder)) {
+                if (ls == d) {
+                    return true;
+                } else if (rs == d) {
+                    return false;
+                }
+            }
+            return ls > rs;
+        }
+    });
+    if (!m_formats.isEmpty()) {
         return true;
     }
 
-    qCCritical(KWIN_DRM) << "Choosing EGL config did not return a suitable config. There were"
-                         << count << "configs:";
+    qCCritical(KWIN_DRM, "Choosing EGL config did not return a supported config. There were %u configs", count);
     for (EGLint i = 0; i < count; i++) {
         EGLint gbmFormat, blueSize, redSize, greenSize, alphaSize;
         eglGetConfigAttrib(eglDisplay(), configs[i], EGL_NATIVE_VISUAL_ID, &gbmFormat);
@@ -725,9 +745,10 @@ bool EglGbmBackend::hasOutput(AbstractOutput *output) const
     return m_outputs.contains(output);
 }
 
-uint32_t EglGbmBackend::drmFormat() const
+uint32_t EglGbmBackend::drmFormat(DrmAbstractOutput *output) const
 {
-    return m_gbmFormat;
+    const auto &o = m_outputs[output];
+    return o.output ? o.current.format.format : DRM_FORMAT_XRGB8888;
 }
 
 DrmGpu *EglGbmBackend::gpu() const
@@ -735,9 +756,23 @@ DrmGpu *EglGbmBackend::gpu() const
     return m_gpu;
 }
 
+GbmFormat EglGbmBackend::chooseFormat(Output &output) const
+{
+    for (const auto &format : qAsConst(m_formats)) {
+        if (output.output->isFormatSupported(format.format)) {
+            return format;
+        }
+    }
+    return {};
+}
+
 EglGbmBackend *EglGbmBackend::renderingBackend()
 {
     return static_cast<EglGbmBackend*>(primaryBackend());
+}
+
+bool operator==(const GbmFormat &lhs, const GbmFormat &rhs) {
+    return lhs.format == rhs.format;
 }
 
 }
