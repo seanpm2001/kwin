@@ -316,9 +316,9 @@ void DrmOutput::updateTransform(Transform transform)
 {
     setTransformInternal(transform);
     static bool valid;
-    // If not set or wrong value, assume KWIN_DRM_SW_ROTATIONS_ONLY=1 until DRM transformations are reliable
-    static int envOnlySoftwareRotations = qEnvironmentVariableIntValue("KWIN_DRM_SW_ROTATIONS_ONLY", &valid) != 0;
-    if (valid && !envOnlySoftwareRotations) {
+    // If not set or wrong value, assume KWIN_DRM_SW_ROTATIONS_ONLY=0
+    static int envOnlySoftwareRotations = qEnvironmentVariableIntValue("KWIN_DRM_SW_ROTATIONS_ONLY", &valid) == 1;
+    if (!valid || !envOnlySoftwareRotations) {
         m_pipeline->pending.transformation = outputToPlaneTransform(transform);
         if (m_gpu->testPendingConfiguration(DrmGpu::TestMode::TestOnly)) {
             m_pipeline->applyPendingChanges();
