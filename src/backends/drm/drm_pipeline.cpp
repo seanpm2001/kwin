@@ -342,7 +342,7 @@ void DrmPipeline::prepareModeset()
     pending.crtc->setPending(DrmCrtc::PropertyIndex::ModeId, activePending() ? mode->blobId() : 0);
 
     pending.crtc->primaryPlane()->setPending(DrmPlane::PropertyIndex::CrtcId, activePending() ? pending.crtc->id() : 0);
-    pending.crtc->primaryPlane()->setTransformation(DrmPlane::Transformation::Rotate0);
+    pending.crtc->primaryPlane()->setTransformation(pending.transformation);
     pending.crtc->primaryPlane()->set(QPoint(0, 0), sourceSize(), QPoint(0, 0), mode->size());
 }
 
