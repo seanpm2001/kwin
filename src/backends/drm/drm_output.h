@@ -75,8 +75,6 @@ private:
 
     QVector<AbstractWaylandOutput::Mode> getModes() const;
 
-    void updateTransform(Transform transform) override;
-
     int gammaRampSize() const override;
     bool setGammaRamp(const GammaRamp &gamma) override;
 
