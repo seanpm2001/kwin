@@ -148,6 +148,7 @@ add_subdirectory(slidingpopups)
 add_subdirectory(thumbnailaside)
 add_subdirectory(touchpoints)
 add_subdirectory(windowgeometry)
+add_subdirectory(windowview)
 add_subdirectory(zoom)
 
 # OpenGL-specific effects
@@ -211,6 +212,7 @@ target_link_libraries(kwin4_effect_builtins PRIVATE
     kwin4_effect_touchpoints
     kwin4_effect_trackmouse
     kwin4_effect_windowgeometry
+    kwin4_effect_windowview
     kwin4_effect_wobblywindows
     kwin4_effect_zoom
 )

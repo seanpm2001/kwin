@@ -1,0 +1,13 @@
+{
+    "KPlugin": {
+        "Category": "Window Management",
+        "Description": "Allows you to select app windows",
+        "EnabledByDefault": true,
+        "Id": "windowview",
+        "License": "GPL",
+        "Name": "Window View"
+    },
+    "org.kde.kwin.effect": {
+        "internal": true
+    }
+}

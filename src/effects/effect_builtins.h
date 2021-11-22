@@ -43,6 +43,7 @@
     Q_IMPORT_PLUGIN(TouchPointsEffectFactory)                                             \
     Q_IMPORT_PLUGIN(TrackMouseEffectFactory)                                              \
     Q_IMPORT_PLUGIN(WindowGeometryFactory)                                                \
+    Q_IMPORT_PLUGIN(WindowViewEffectFactory)                                              \
     Q_IMPORT_PLUGIN(WobblyWindowsEffectFactory)                                           \
     Q_IMPORT_PLUGIN(ZoomEffectFactory)
 
