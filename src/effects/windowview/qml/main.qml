@@ -46,8 +46,6 @@ Item {
             wId: model.client.internalId
             x: model.client.x - targetScreen.geometry.x
             y: model.client.y - targetScreen.geometry.y
-            width: model.client.width
-            height: model.client.height
 
             layer.enabled: true
             layer.effect: FastBlur {
@@ -109,8 +107,6 @@ Item {
             wId: model.client.internalId
             x: model.client.x - targetScreen.geometry.x
             y: model.client.y - targetScreen.geometry.y
-            width: model.client.width
-            height: model.client.height
             visible: opacity > 0
             opacity: (model.client.hidden || container.organized) ? 0 : 1
 
