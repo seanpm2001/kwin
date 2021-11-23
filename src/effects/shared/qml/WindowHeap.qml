@@ -57,6 +57,14 @@ FocusScope {
                     return heap.showOnly.length && heap.showOnly.indexOf(client.internalId) == -1;
                 }
 
+                ExpoLayout.enabled: !hidden
+                ExpoLayout.naturalX: client.x - targetScreen.geometry.x - expoLayout.Kirigami.ScenePosition.x
+                ExpoLayout.naturalY: client.y - targetScreen.geometry.y - expoLayout.Kirigami.ScenePosition.y
+                ExpoLayout.naturalWidth: client.width
+                ExpoLayout.naturalHeight: client.height
+                ExpoLayout.persistentKey: client.internalId
+                ExpoLayout.bottomMargin: icon.height / 4 + caption.height
+
                 state: {
                     if (heap.effectiveOrganized) {
                         return hidden ? "active-hidden" : "active";
@@ -95,8 +103,8 @@ FocusScope {
                                         dragHandler.centroid.position.x
                                 y: -dragHandler.centroid.pressPosition.y * dragHandler.targetScale +
                                         dragHandler.centroid.position.y
-                                width: cell.width * dragHandler.targetScale
-                                height: cell.height * dragHandler.targetScale
+                                width: thumb.ExpoLayout.width * dragHandler.targetScale
+                                height: thumb.ExpoLayout.height * dragHandler.targetScale
                             }
                         }
                     ]
@@ -131,18 +139,6 @@ FocusScope {
                     visible: !dragHandler.active
                 }
 
-                ExpoCell {
-                    id: cell
-                    layout: expoLayout
-                    enabled: !thumb.hidden
-                    naturalX: thumb.client.x - targetScreen.geometry.x - expoLayout.Kirigami.ScenePosition.x
-                    naturalY: thumb.client.y - targetScreen.geometry.y - expoLayout.Kirigami.ScenePosition.y
-                    naturalWidth: thumb.client.width
-                    naturalHeight: thumb.client.height
-                    persistentKey: thumb.client.internalId
-                    bottomMargin: icon.height / 4 + caption.height
-                }
-
                 states: [
                     State {
                         name: "initial"
@@ -166,10 +162,10 @@ FocusScope {
                         name: "active"
                         PropertyChanges {
                             target: thumb
-                            x: cell.x
-                            y: cell.y
-                            width: cell.width
-                            height: cell.height
+                            x: thumb.ExpoLayout.x
+                            y: thumb.ExpoLayout.y
+                            width: thumb.ExpoLayout.width
+                            height: thumb.ExpoLayout.height
                         }
                     },
                     State {
