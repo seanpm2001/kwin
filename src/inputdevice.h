@@ -45,12 +45,12 @@ public:
     virtual bool isLidSwitch() const = 0;
 
 Q_SIGNALS:
-    void keyChanged(quint32 key, InputRedirection::KeyboardKeyState, quint32 time, InputDevice *device);
-    void pointerButtonChanged(quint32 button, InputRedirection::PointerButtonState state, quint32 time, InputDevice *device);
+    void keyChanged(quint32 key, KWin::InputRedirection::KeyboardKeyState, quint32 time, InputDevice *device);
+    void pointerButtonChanged(quint32 button, KWin::InputRedirection::PointerButtonState state, quint32 time, InputDevice *device);
     void pointerMotionAbsolute(const QPointF &position, quint32 time, InputDevice *device);
     void pointerMotion(const QSizeF &delta, const QSizeF &deltaNonAccelerated, quint32 time, quint64 timeMicroseconds, InputDevice *device);
-    void pointerAxisChanged(InputRedirection::PointerAxis axis, qreal delta, qint32 discreteDelta,
-                            InputRedirection::PointerAxisSource source, quint32 time, InputDevice *device);
+    void pointerAxisChanged(KWin::InputRedirection::PointerAxis axis, qreal delta, qint32 discreteDelta,
+                            KWin::InputRedirection::PointerAxisSource source, quint32 time, InputDevice *device);
     void touchFrame(InputDevice *device);
     void touchCanceled(InputDevice *device);
     void touchDown(qint32 id, const QPointF &absolutePos, quint32 time, InputDevice *device);
@@ -70,7 +70,7 @@ Q_SIGNALS:
     void switchToggledOn(quint32 time, quint64 timeMicroseconds, InputDevice *device);
     void switchToggledOff(quint32 time, quint64 timeMicroseconds, InputDevice *device);
 
-    void tabletToolEvent(InputRedirection::TabletEventType type, const QPointF &pos,
+    void tabletToolEvent(KWin::InputRedirection::TabletEventType type, const QPointF &pos,
                          qreal pressure, int xTilt, int yTilt, qreal rotation, bool tipDown,
                          bool tipNear, const TabletToolId &tabletToolId, quint32 time);
     void tabletToolButtonEvent(uint button, bool isPressed, const TabletToolId &tabletToolId);
