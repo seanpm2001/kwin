@@ -635,13 +635,6 @@ Q_SIGNALS:
     void visibleGeometryChanged();
 
 protected Q_SLOTS:
-    /**
-     * Checks whether the screen number for this Toplevel changed and updates if needed.
-     * Any method changing the geometry of the Toplevel should call this method.
-     */
-    void checkOutput();
-    void setupCheckOutputConnection();
-    void removeCheckOutputConnection();
     void setReadyForPainting();
 
 protected:
@@ -672,6 +665,8 @@ protected:
     void deleteShadow();
     void deleteEffectWindow();
     void setDepth(int depth);
+
+    AbstractOutput *m_output = nullptr;
     QRect m_frameGeometry;
     QRect m_clientGeometry;
     QRect m_bufferGeometry;
@@ -699,7 +694,6 @@ private:
     QRegion opaque_region;
     mutable QRegion m_shapeRegion;
     mutable bool m_shapeRegionIsValid = false;
-    AbstractOutput *m_output = nullptr;
     bool m_skipCloseAnimation;
     quint32 m_pendingSurfaceId = 0;
     QPointer<KWaylandServer::SurfaceInterface> m_surface;

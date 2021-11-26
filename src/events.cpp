@@ -1255,6 +1255,7 @@ void Unmanaged::configureNotifyEvent(xcb_configure_notify_event_t *e)
         m_clientGeometry = newgeom;
         m_frameGeometry = newgeom;
         m_bufferGeometry = newgeom;
+        checkOutput();
         Q_EMIT bufferGeometryChanged(this, old);
         Q_EMIT clientGeometryChanged(this, old);
         Q_EMIT frameGeometryChanged(this, old);

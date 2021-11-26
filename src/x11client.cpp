@@ -4068,6 +4068,8 @@ void X11Client::moveResizeInternal(const QRect &rect, MoveResizeMode mode)
             m_lastClientGeometry == m_clientGeometry) {
         return;
     }
+
+    m_output = kwinApp()->platform()->outputAt(frameGeometry.center());
     if (areGeometryUpdatesBlocked()) {
         setPendingMoveResizeMode(mode);
         return;
@@ -4076,6 +4078,7 @@ void X11Client::moveResizeInternal(const QRect &rect, MoveResizeMode mode)
     const QRect oldBufferGeometry = m_lastBufferGeometry;
     const QRect oldFrameGeometry = m_lastFrameGeometry;
     const QRect oldClientGeometry = m_lastClientGeometry;
+    const AbstractOutput *oldOutput = m_lastOutput;
 
     updateServerGeometry();
     updateWindowRules(Rules::Position|Rules::Size);
@@ -4083,6 +4086,7 @@ void X11Client::moveResizeInternal(const QRect &rect, MoveResizeMode mode)
     m_lastBufferGeometry = m_bufferGeometry;
     m_lastFrameGeometry = m_frameGeometry;
     m_lastClientGeometry = m_clientGeometry;
+    m_lastOutput = m_output;
 
     if (isActive()) {
         workspace()->setActiveOutput(output());
@@ -4097,6 +4101,9 @@ void X11Client::moveResizeInternal(const QRect &rect, MoveResizeMode mode)
     }
     if (oldFrameGeometry != m_frameGeometry) {
         Q_EMIT frameGeometryChanged(this, oldFrameGeometry);
+    }
+    if (oldOutput != m_output) {
+        Q_EMIT screenChanged();
     }
     Q_EMIT geometryShapeChanged(this, oldFrameGeometry);
 }
