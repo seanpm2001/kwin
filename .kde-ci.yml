@@ -35,3 +35,4 @@ Dependencies:
     'plasma/kdecoration': '@same'
     'plasma/kscreenlocker': '@same'
     'plasma/kwayland-server': '@same'
+    'plasma/plasma-workspace': '@same'
