@@ -117,7 +117,7 @@ void InputMethod::hide()
     setActive(false);
 }
 
-bool InputMethod::touchEventTriggered() const
+bool InputMethod::shouldShowOnActive() const
 {
     return input()->touch()
            && input()->touch()->lastEventTime() > input()->keyboard()->lastEventTime()
@@ -252,7 +252,7 @@ void InputMethod::textInputInterfaceV2StateUpdated(quint32 serial, KWaylandServe
     if (!t2 || !t2->isEnabled()) {
         return;
     }
-    if (m_inputClient && touchEventTriggered()) {
+    if (m_inputClient && shouldShowOnActive()) {
         m_inputClient->allow();
     }
     switch (reason) {
@@ -529,7 +529,7 @@ void InputMethod::updateInputPanelState()
         return;
     }
 
-    if (m_inputClient && touchEventTriggered()) {
+    if (m_inputClient && shouldShowOnActive()) {
         m_inputClient->allow();
     }
 

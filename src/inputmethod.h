@@ -57,6 +57,8 @@ public:
     void setPanel(InputPanelV1Client* client);
     void setInputMethodCommand(const QString &path);
 
+    bool shouldShowOnActive() const;
+
 Q_SIGNALS:
     void activeChanged(bool active);
     void enabledChanged(bool enabled);
@@ -93,8 +95,6 @@ private:
     void setTrackedClient(AbstractClient *trackedClient);
     void installKeyboardGrab(KWaylandServer::InputMethodGrabV1 *keyboardGrab);
     void updateModifiersMap(const QByteArray &modifiers);
-
-    bool touchEventTriggered() const;
 
     struct {
         QString text = QString();
